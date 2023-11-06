@@ -9,6 +9,148 @@ import (
 	"time"
 )
 
+const (
+	storePath = "../storage/tasks2.json"
+)
+
+type Data struct {
+	ID   int   `json:"id"`
+	Prev []int `json:"prev"`
+	Next []int `json:"next"`
+	Time int   `json:"time"`
+	Res  int   `json:"res"`
+}
+
+type Task struct {
+	Prev []int
+	Next []int
+	Time int
+	Res  int
+}
+
+func jsonParse(name string) ([]Data, error) {
+	file, err := os.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []Data
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func shfl(nums []int) {
+	rand.NewSource(time.Now().UnixNano())
+	rand.Shuffle(len(nums), func(i, j int) {
+		nums[i], nums[j] = nums[j], nums[i]
+	})
+}
+
+func genSample(ids []int, taskMap map[int]Task) (q []int) {
+	q = append(q, ids[0])
+	q = append(q, ids[1])
+	used := make(map[int]bool)
+	for i := 0; i < len(ids)-1; i++ {
+		fmt.Println(i)
+		item := q[i]
+		task := taskMap[item]
+		shfl(task.Next)
+		for _, item := range task.Next {
+			if !used[item] {
+				flag := false
+				for _, pr := range taskMap[item].Prev {
+					if !used[pr] {
+						flag = true
+					}
+				}
+				if flag {
+					continue
+				}
+				q = append(q, item)
+				used[item] = true
+			}
+		}
+	}
+	return
+}
+
+func genSampleMany(n int, ids []int, taskMap map[int]Task) (res [][]int) {
+	for i := 0; i < n; i++ {
+		res = append(res, genSample(ids, taskMap))
+	}
+	return
+}
+
+func main() {
+	//Parse JSON
+	data, err := jsonParse(storePath)
+	if err != nil {
+		log.Fatalf("Не удалось прочитать файл: %v", err)
+	}
+
+	// Print data
+	fmt.Println("Data:")
+	for _, rec := range data {
+		fmt.Println(rec)
+	}
+	fmt.Println()
+
+	// Собираем слайс ID
+	var idSlice []int
+	for _, rec := range data {
+		idSlice = append(idSlice, rec.ID)
+	}
+
+	// Выводим результат
+	fmt.Println("idSlice:")
+	fmt.Println(idSlice)
+	fmt.Println()
+
+	// Create Map of tasks
+	taskMap := make(map[int]Task)
+	for _, rec := range data {
+		taskMap[rec.ID] = Task{
+			Prev: rec.Prev,
+			Next: rec.Next,
+			Time: rec.Time,
+			Res:  rec.Res,
+		}
+	}
+
+	// Print data
+	fmt.Println("taskMap:")
+	for id, task := range taskMap {
+		fmt.Print(id)
+		fmt.Print(" : ")
+		fmt.Println(task)
+	}
+	fmt.Println()
+
+	//sample := genSampleMany(10, idSlice, taskMap)
+	// fmt.Println("sample:")
+	// for _, slice := range sample {
+	// 	fmt.Println(slice)
+	// }
+	// fmt.Println()
+	sample := genSample(idSlice, taskMap)
+	fmt.Println(sample)
+	fmt.Println()
+}
+
+/*
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"time"
+)
+
 type Data struct {
 	ID   int   `json:"id"`
 	Prev []int `json:"prev"`
@@ -248,3 +390,4 @@ func main() {
 	var input string
 	fmt.Scanln(&input)
 }
+*/

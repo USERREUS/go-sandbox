@@ -1,0 +1,4 @@
+1. Parse JSON
+2. Create permutatuions
+3. Calculate in parallel
+4. Output result
