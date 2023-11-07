@@ -10,9 +10,13 @@ import (
 )
 
 const (
-	storePath = "../storage/tasks2.json"
+	storePath  = "../storage/tasks2.json" //путь к файлу с задачами
+	maxPers    = 5                        //количество работников
+	iterations = 1000                     //количество итераций расчета
+	pInfTime   = 10000                    //бесконечное время выполнения
 )
 
+//Структура задачи для чтения из файла
 type Data struct {
 	ID   int   `json:"id"`
 	Prev []int `json:"prev"`
@@ -21,6 +25,7 @@ type Data struct {
 	Res  int   `json:"res"`
 }
 
+//Структура задачи для расчетов
 type Task struct {
 	Prev []int
 	Next []int
@@ -28,6 +33,80 @@ type Task struct {
 	Res  int
 }
 
+//Результат расчета
+type Pair struct {
+	time int
+	comp []int
+}
+
+//Расчет времени выполнения задач
+func simulate(taskMap map[int]Task, maxPers int, ch chan Pair) {
+	sample := genSample(taskMap)
+	tmp := make([]int, len(sample))
+	copy(tmp, sample)
+
+	done := make(map[int]bool)     //выполненные задачи
+	inProcess := make(map[int]int) //задачи в процессе выполнения
+	time := 0                      //модельное время
+	pers := maxPers                //количество свободных работников
+
+	for len(sample) > 0 {
+		taskID := sample[0]
+		task := taskMap[taskID]
+
+		//Проверка на готовность задачи к выполнению
+		taskReady := true
+		if len(task.Prev) > 0 {
+			for _, i := range task.Prev {
+				if !done[i] {
+					taskReady = false
+					break
+				}
+			}
+		}
+
+		//Если задача готова к выполнению и на нее хватает свободных сотрудников
+		if taskReady && pers >= task.Res {
+			inProcess[taskID] = task.Time
+			pers -= task.Res
+			sample = sample[1:]
+		} else {
+			//Приращение модельного времени на минимальное из времен выполняюшихся задач
+			minTime := pInfTime
+			for _, t := range inProcess {
+				if t < minTime {
+					minTime = t
+				}
+			}
+			time += minTime
+
+			//Перемещение задач из выполняющихся в выполненные
+			for item, t := range inProcess {
+				if t == minTime {
+					pers += taskMap[item].Res
+					done[item] = true
+					delete(inProcess, item)
+				} else {
+					inProcess[item] -= minTime
+				}
+			}
+		}
+	}
+
+	//Приращение времени на максимум из выполняющихся задач
+	maxTime := 0
+	for _, t := range inProcess {
+		if t > maxTime {
+			maxTime = t
+		}
+	}
+	time += maxTime
+
+	//Сохранение результата в канал
+	ch <- Pair{time: time, comp: tmp}
+}
+
+//Чтение файла в структуру данных
 func jsonParse(name string) ([]Data, error) {
 	file, err := os.ReadFile(name)
 	if err != nil {
@@ -43,74 +122,102 @@ func jsonParse(name string) ([]Data, error) {
 	return data, nil
 }
 
-func shfl(nums []int) {
-	rand.NewSource(time.Now().UnixNano())
-	rand.Shuffle(len(nums), func(i, j int) {
-		nums[i], nums[j] = nums[j], nums[i]
-	})
+//Перемешивание элементов очереди в случайном порядке
+func shflQueue(q *[]int) {
+	if len(*q) <= 1 {
+		return
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	r := rand.Intn(2)
+	if r == 1 {
+		rand.Shuffle(len(*q), func(i, j int) {
+			(*q)[i], (*q)[j] = (*q)[j], (*q)[i]
+		})
+	}
 }
 
-func genSample(ids []int, taskMap map[int]Task) (q []int) {
-	q = append(q, ids[0])
-	q = append(q, ids[1])
-	used := make(map[int]bool)
-	for i := 0; i < len(ids)-1; i++ {
-		fmt.Println(i)
-		item := q[i]
-		task := taskMap[item]
-		shfl(task.Next)
-		for _, item := range task.Next {
-			if !used[item] {
-				flag := false
-				for _, pr := range taskMap[item].Prev {
+//Генерация последовательности задач
+func genSample(taskMap map[int]Task) (res []int) {
+	var q []int                          //очередь задач
+	used := make([]bool, len(taskMap)+1) //признак выполнения задачи
+	for i := range used {
+		used[i] = false
+	}
+
+	//Заполнение очереди задачами без предков
+	for id, item := range taskMap {
+		if len(item.Prev) == 0 {
+			q = append(q, id)
+		}
+	}
+
+	for len(q) > 0 {
+		//Перемешивание, извлечение и формирование результата
+		shflQueue(&q)
+		cur := q[0]
+		used[cur] = true
+		q = q[1:]
+		res = append(res, cur)
+
+		//Добавление новых задач в очередь
+		for _, id := range taskMap[cur].Next {
+			flag := false
+			if !used[id] {
+				for _, pr := range taskMap[id].Prev {
 					if !used[pr] {
 						flag = true
+						break
 					}
 				}
 				if flag {
 					continue
 				}
-				q = append(q, item)
-				used[item] = true
 			}
+			q = append(q, id)
 		}
 	}
 	return
 }
 
-func genSampleMany(n int, ids []int, taskMap map[int]Task) (res [][]int) {
-	for i := 0; i < n; i++ {
-		res = append(res, genSample(ids, taskMap))
+//Проверка на валидность последовательности задач
+func isValid(p []int, task_map map[int]Task) bool {
+	used := make(map[int]bool)
+	valid := true
+	for _, i := range p {
+		for _, j := range task_map[i].Next {
+			if used[j] {
+				valid = false
+			}
+		}
+		used[i] = true
 	}
-	return
+	return valid
 }
 
 func main() {
-	//Parse JSON
+	//Парсинг JSON файла с задачами
 	data, err := jsonParse(storePath)
 	if err != nil {
 		log.Fatalf("Не удалось прочитать файл: %v", err)
 	}
 
-	// Print data
-	fmt.Println("Data:")
+	//Вывод прочитанных данных
+	fmt.Println("Задачи:")
 	for _, rec := range data {
-		fmt.Println(rec)
+		fmt.Printf(
+			"ID : %d; Prev : %v; Next : %v; Time : %d; Res : %d",
+			rec.ID,
+			rec.Prev,
+			rec.Next,
+			rec.Time,
+			rec.Res,
+		)
+		fmt.Println()
 	}
 	fmt.Println()
 
-	// Собираем слайс ID
-	var idSlice []int
-	for _, rec := range data {
-		idSlice = append(idSlice, rec.ID)
-	}
-
-	// Выводим результат
-	fmt.Println("idSlice:")
-	fmt.Println(idSlice)
-	fmt.Println()
-
-	// Create Map of tasks
+	//Создание словаря идентификатор - задача
 	taskMap := make(map[int]Task)
 	for _, rec := range data {
 		taskMap[rec.ID] = Task{
@@ -121,259 +228,18 @@ func main() {
 		}
 	}
 
-	// Print data
-	fmt.Println("taskMap:")
-	for id, task := range taskMap {
-		fmt.Print(id)
-		fmt.Print(" : ")
-		fmt.Println(task)
-	}
-	fmt.Println()
+	//Создание канала для параллельной обработки данных
+	ch := make(chan Pair)
 
-	//sample := genSampleMany(10, idSlice, taskMap)
-	// fmt.Println("sample:")
-	// for _, slice := range sample {
-	// 	fmt.Println(slice)
-	// }
-	// fmt.Println()
-	sample := genSample(idSlice, taskMap)
-	fmt.Println(sample)
-	fmt.Println()
-}
-
-/*
-import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"math/rand"
-	"os"
-	"time"
-)
-
-type Data struct {
-	ID   int   `json:"id"`
-	Prev []int `json:"prev"`
-	Next []int `json:"next"`
-	Time int   `json:"time"`
-	Req  int   `json:"req"`
-}
-
-type Task struct {
-	prev []int
-	next []int
-	time int
-	req  int
-}
-
-type Pair struct {
-	time int
-	comp []int
-}
-
-const (
-	storePath = "..storage/tasks.json"
-)
-
-func parse_json(name string) ([]Data, error) {
-	file, err := os.ReadFile(name)
-	if err != nil {
-		return nil, err
+	//Запуск горутин с расчетной функцией
+	for i := 0; i < iterations; i++ {
+		go simulate(taskMap, maxPers, ch)
 	}
 
-	var data []Data
-	err = json.Unmarshal(file, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func is_valid(p []int, task_map map[int]Task) bool {
-	used := make(map[int]bool)
-	valid := true
-	for _, i := range p {
-		for _, j := range task_map[i].next {
-			if used[j] {
-				valid = false
-			}
-		}
-		used[i] = true
-	}
-	return valid
-}
-
-func calc(task_map map[int]Task, p []int, maxPers int, ch chan Pair) {
-	q := make([]int, len(p))
-	copy(q, p)
-
-	done := make(map[int]bool)
-	inProcess := make(map[int]int)
-	time := 0
-	pers := maxPers
-
-	for len(q) > 0 {
-		taskID := q[0]
-		task := task_map[taskID] // replace with your actual task retrieval function
-
-		taskReady := true
-		if len(task.prev) > 0 {
-			for _, i := range task.prev {
-				if !done[i] {
-					taskReady = false
-					break
-				}
-			}
-		}
-
-		if taskReady && pers >= task.req {
-			inProcess[taskID] = task.time
-			pers -= task.req
-			q = q[1:]
-		} else {
-			minTime := 10000
-			for _, t := range inProcess {
-				if t < minTime {
-					minTime = t
-				}
-			}
-			time += minTime
-
-			for item, t := range inProcess {
-				if t == minTime {
-					pers += task_map[item].req
-					done[item] = true
-					inProcess[item] = 10000
-				} else {
-					inProcess[item] -= minTime
-				}
-			}
-		}
-	}
-
-	minTime := 10000
-	for _, t := range inProcess {
-		if t < minTime {
-			minTime = t
-		}
-	}
-	time += minTime
-
-	fmt.Println(time)
-
-	ch <- Pair{time: time, comp: p}
-}
-
-func permute(nums []int, task_map map[int]Task) [][]int {
-	var result [][]int
-	var backtrack func(int)
-
-	backtrack = func(first int) {
-		if first >= len(nums) {
-			temp := make([]int, len(nums))
-			copy(temp, nums)
-			if is_valid(temp, task_map) {
-				result = append(result, temp)
-			}
-			return
-		}
-
-		for i := first; i < len(nums); i++ {
-			nums[first], nums[i] = nums[i], nums[first]
-			backtrack(first + 1)
-			nums[first], nums[i] = nums[i], nums[first]
-		}
-	}
-
-	backtrack(0)
-
-	return result
-}
-
-func shfl(nums []int) {
-	rand.NewSource(time.Now().UnixNano())
-	rand.Shuffle(len(nums), func(i, j int) {
-		nums[i], nums[j] = nums[j], nums[i]
-	})
-}
-
-// func gen_all(n int, ids []int, task_map map[int]Task) [][]int {
-// 	res := make([][]int, 0)
-// 	for i := 0; i < n; i++ {
-// 		res = append(res, generate(ids, task_map))
-// 	}
-// 	return res
-// }
-
-func generate(ids []int, task_map map[int]Task) (q []int) {
-	q = append(q, ids[0])
-
-	used := make(map[int]bool)
-
-	for i := 0; i < len(ids)-1; i++ {
-		item := q[i]
-		task := task_map[item]
-		shfl(task.next)
-		for _, item := range task.next {
-			if !used[item] {
-				q = append(q, item)
-				used[item] = true
-			}
-		}
-	}
-
-	return
-}
-
-func main() {
-	data, err := parse_json(storePath)
-	if err != nil {
-		log.Fatalf("Не удалось прочитать файл: %v", err)
-	}
-
-	// Print data
-	fmt.Println(data)
-
-	// Собираем слайс ID
-	var idSlice []int
-	for _, d := range data {
-		idSlice = append(idSlice, d.ID)
-	}
-
-	// Выводим результат
-	fmt.Println(idSlice)
-
-	task_map := make(map[int]Task)
-	for _, val := range data {
-		task_map[val.ID] = Task{prev: val.Prev, next: val.Next, time: val.Time, req: val.Req}
-	}
-
-	fmt.Println(task_map)
-
-	//permutations := permute(idSlice, task_map)
-	//permutations := gen_all(10, idSlice, task_map)
-	//fmt.Println(permutations)
-
-	//fmt.Println()
-	//fmt.Println(permutations)
-	//fmt.Println()
-
-	maxPers := 5
-
-	var ch chan Pair = make(chan Pair)
-
-	// for _, p := range permutations {
-	// 	go calc(task_map, p, maxPers, ch)
-	// }
-
-	for i := 0; i < 10; i++ {
-		go calc(task_map, generate(idSlice, task_map), maxPers, ch)
-	}
-
-	var min_time int = 10000
-	var res_comb = make([]int, 0)
-	for i := 0; i < 10; i++ {
+	//Вычисление минимального времени из рассчитанных
+	min_time := pInfTime
+	var res_comb []int
+	for i := 0; i < iterations; i++ {
 		pair := <-ch
 		if pair.time < min_time {
 			min_time = pair.time
@@ -381,13 +247,11 @@ func main() {
 		}
 	}
 
-	fmt.Println()
-	fmt.Println("Минимальное время: ")
-	fmt.Println(min_time)
+	fmt.Printf("Минимальное время = %d. С %d работниками на наборе задач: ", min_time, maxPers)
 	fmt.Println(res_comb)
 	fmt.Println()
 
+	fmt.Println("Нажмите Enter...")
 	var input string
 	fmt.Scanln(&input)
 }
-*/
