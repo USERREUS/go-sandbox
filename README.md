@@ -1,1 +1,8 @@
-# Hello from Go develepment repository! =)
+## go-sandbox
+
+Репозиторий для фрагментов учебных задач
+
+
+## scheduler-service
+
+Репозиротий планировщика задач
