@@ -1,0 +1,9 @@
+docker run --name postgres-container -e POSTGRES_PASSWORD=your_postgres_password -p 5432:5432 -d postgres
+docker exec -it postgres-container psql -U postgres
+
+CREATE TABLE product (
+    code VARCHAR NOT NULL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    weight NUMERIC NOT NULL,
+    description VARCHAR NOT NULL
+);

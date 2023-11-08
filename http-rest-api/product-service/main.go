@@ -13,7 +13,7 @@ import (
 
 const (
 	host     = "localhost" // Адрес хоста PostgreSQL
-	port     = "5433"      // Порт PostgreSQL
+	port     = "5432"      // Порт PostgreSQL
 	user     = "postgres"  // Имя пользователя PostgreSQL
 	password = "password"  // Пароль пользователя
 	dbname   = "postgres"  // Имя вашей базы данных
@@ -63,13 +63,6 @@ func initDB() {
 	}
 }
 
-// @Summary Получить продукт по ID
-// @Description Получить информацию о продукте по его коду
-// @ID get-product-by-id
-// @Produce json
-// @Param id path string true "Код продукта"
-// @Success 200 {object} Product
-// @Router /products/{id} [get]
 func getOne(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	productCode := params["id"]
@@ -89,12 +82,6 @@ func getOne(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, product)
 }
 
-// @Summary Получить все продукты
-// @Description Получить список всех продуктов
-// @ID get-all-products
-// @Produce json
-// @Success 200 {array} Product
-// @Router /products [get]
 func getAll(w http.ResponseWriter, r *http.Request) {
 	// Запрос к базе данных для получения всех продуктов
 	rows, err := db.Query("SELECT code, name, weight, description FROM product")
@@ -119,13 +106,6 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, products)
 }
 
-// @Summary Удалить продукт по ID
-// @Description Удалить продукт по его коду
-// @ID delete-product
-// @Param id path string true "Код продукта"
-// @Produce json
-// @Success 200 {string} string
-// @Router /products/{id} [delete]
 func deleteOne(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	productCode := params["id"]
@@ -140,14 +120,6 @@ func deleteOne(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product deleted"})
 }
 
-// @Summary Создать новый продукт
-// @Description Создать новый продукт
-// @ID create-product
-// @Accept json
-// @Param product body Product true "Данные нового продукта"
-// @Produce json
-// @Success 201 {object} Product
-// @Router /products [post]
 func create(w http.ResponseWriter, r *http.Request) {
 	var newProduct Product
 	decoder := json.NewDecoder(r.Body)
@@ -158,14 +130,14 @@ func create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Генерация случайного кода продукта
-	productCode := uuid.New().String()
+	newProduct.Code = uuid.New().String()
 
 	// Вставка нового продукта в базу данных
 	sqlStatement := `
         INSERT INTO product (code, name, weight, description)
         VALUES ($1, $2, $3, $4)
     `
-	_, err := db.Exec(sqlStatement, productCode, newProduct.Name, newProduct.Weight, newProduct.Description)
+	_, err := db.Exec(sqlStatement, newProduct.Code, newProduct.Name, newProduct.Weight, newProduct.Description)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to create product")
 		return
@@ -176,15 +148,15 @@ func create(w http.ResponseWriter, r *http.Request) {
 
 //Don't work
 func respondWithError(w http.ResponseWriter, code int, message string) {
-	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
 	response := map[string]string{"error": message}
 	json.NewEncoder(w).Encode(response)
 }
 
 //Don't work
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(payload)
 }
