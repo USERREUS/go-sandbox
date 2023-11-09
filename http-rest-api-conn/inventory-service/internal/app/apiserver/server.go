@@ -41,6 +41,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *server) configureRouter() {
 	s.router.Use(s.logRequest)
 	s.router.HandleFunc("/inventory", s.handleInventoryCreate()).Methods("POST")
+	s.router.HandleFunc("/inventory", s.handleInventoryUpdate()).Methods("PUT")
 	s.router.HandleFunc("/inventory", s.handleInventoryFindAll()).Methods("GET")
 	s.router.HandleFunc("/inventory/{id}", s.handleInventoryFindOne()).Methods("GET")
 	s.router.HandleFunc("/inventory/{id}", s.handleInventoryDelete()).Methods("DELETE")
@@ -92,6 +93,24 @@ func (s *server) handleInventoryCreate() http.HandlerFunc {
 		}
 
 		s.respond(w, r, http.StatusCreated, m)
+	}
+}
+
+// handleInventoryCreate обрабатывает запрос на создание записи инвентаря.
+func (s *server) handleInventoryUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		m := &model.Model{}
+		if err := json.NewDecoder(r.Body).Decode(m); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := s.store.Repository().Update(m); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, m)
 	}
 }
 

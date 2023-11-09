@@ -1,7 +1,9 @@
 package apiserver
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -97,12 +99,93 @@ func (s *server) Enqueue(id string) error {
 	return nil
 }
 
+func (s *server) putInventoryProduct(port string, product *model.ProductItem) error {
+	// Формируем URL для запроса к серверу
+	url := fmt.Sprintf("http://localhost:%s/inventory", port)
+
+	// Преобразуем данные в формат JSON
+	jsonData, err := json.Marshal(&product)
+	if err != nil {
+		return err
+	}
+
+	// Отправляем PUT-запрос с использованием gorilla/mux
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	// Устанавливаем заголовок Content-Type
+	req.Header.Set("Content-Type", "application/json")
+
+	// Отправляем запрос
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("Not found: %d", resp.StatusCode))
+	}
+
+	return nil
+}
+
+func (s *server) getInventoryProductByCode(port, code string) (*model.ProductItem, error) {
+	// Формируем URL для запроса к серверу
+	url := fmt.Sprintf("http://localhost:%s/inventory/%s", port, code)
+
+	// Отправляем GET-запрос к серверу
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Парсим JSON-ответ
+	var product model.ProductItem
+	err = json.NewDecoder(resp.Body).Decode(&product)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ProductItem{
+		ProductCode: product.ProductCode,
+		Name:        product.Name,
+		Count:       product.Count,
+		Cost:        product.Cost,
+	}, nil
+}
+
 func (s *server) handleOrderCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var items []*model.ProductItem
 		if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
+		}
+
+		for _, item := range items {
+			prod, err := s.getInventoryProductByCode("80XX", item.ProductCode)
+			if err != nil {
+				s.error(w, r, http.StatusNotFound, err)
+				return
+			}
+
+			if prod.Count < item.Count || prod.Cost != item.Cost {
+				s.error(w, r, http.StatusBadRequest, errors.New("Data error"))
+				return
+			}
+
+			prod.Count -= item.Count
+
+			err = s.putInventoryProduct("8080", prod)
+			if err != nil {
+				s.error(w, r, http.StatusNotFound, err)
+				return
+			}
 		}
 
 		id, err := s.store.Repository().Create(items)

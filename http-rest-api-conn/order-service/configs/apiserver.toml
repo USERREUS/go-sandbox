@@ -1,4 +1,4 @@
-"bind_addr" = ":8081"
-"log_level" = "debug"
-"database_url" = "mongodb://127.0.0.1:27017"
-"rabbitmq_url" = "amqp://guest:guest@localhost:5672/"
+"bind_addr"         = ":8081"
+"log_level"         = "debug"
+"database_url"      = "mongodb://127.0.0.1:27017"
+"rabbitmq_url"      = "amqp://guest:guest@localhost:5672/"

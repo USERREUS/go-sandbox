@@ -32,7 +32,6 @@ func (r *Repository) Create(m *model.Model) error {
 
 // Update обновляет существующую запись в базе данных.
 func (r *Repository) Update(m *model.Model) error {
-	m.ID = uuid.New().String()
 	return r.store.db.QueryRow(
 		fmt.Sprintf("UPDATE %s SET name = $2, count = $3, cost = $4 WHERE id = $1 RETURNING id", table),
 		m.ID,
