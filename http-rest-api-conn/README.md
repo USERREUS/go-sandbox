@@ -29,7 +29,7 @@
 ### HTTP endpoints
 ```
 -   POST: /product 	-- Create(Product) -> Product
--    GET: /product 	-- GetAll() 	   -> map\[Code\]Poduct
+-    GET: /product 	-- GetAll() 	   -> map[Code]Poduct
 -    GET: /product/{id} -- GetOne(Code)    -> Product
 - DELETE: /product/{id} -- Delete(Code)    -> Product
 ```
@@ -55,7 +55,7 @@
 ```
 -   POST: /inventory      -- Create(Inventory)   -> Inventory
 -    PUT: /inventory      -- Update(Inventory)   -> Inventory
--    GET: /inventory      -- GetAll() 	       -> map\[ProductCode\]Inventory
+-    GET: /inventory      -- GetAll() 	       -> map[ProductCode]Inventory
 -    GET: /inventory/{id} -- GetOne(ProductCode) -> Inventory
 - DELETE: /inventory/{id} -- Delete(ProductCode) -> Inventory
 ```
@@ -81,9 +81,9 @@
 ### HTTP endpoints
 ```
 -   POST: /notification       -- Create(Notification) -> Notification
--    GET: /notification       -- GetAll() 	      -> \[\]Notification
--    GET: /notification/{msg} -- GetMany(MsgType)     -> \[\]Notification
-- DELETE: /notification/{msg} -- Delete(MsgType)      -> \[\]Notification
+-    GET: /notification       -- GetAll() 	      -> []Notification
+-    GET: /notification/{msg} -- GetMany(MsgType)     -> []Notification
+- DELETE: /notification/{msg} -- Delete(MsgType)      -> []Notification
 ```
 
 
@@ -113,8 +113,8 @@
 	
 ### HTTP endpoints
 ```
--   POST: /order      -- Create(\[\]ProductItem) -> \[\]ProductItem
--    GET: /order      -- GetAll() 	       -> map\[code\]Order
+-   POST: /order      -- Create([]ProductItem) -> []ProductItem
+-    GET: /order      -- GetAll() 	       -> map[code]Order
 -    GET: /order/{id} -- GetOne(Code)          -> Order
 - DELETE: /order/{id} -- Delete(Code)          -> Order
 ```
