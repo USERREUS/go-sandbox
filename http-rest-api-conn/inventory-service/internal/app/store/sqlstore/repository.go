@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"inventory/internal/app/model"
 	"inventory/internal/app/store"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -20,35 +18,34 @@ type Repository struct {
 
 // Create добавляет новую запись в базу данных.
 func (r *Repository) Create(m *model.Model) error {
-	m.ID = uuid.New().String()
 	return r.store.db.QueryRow(
-		fmt.Sprintf("INSERT INTO %s (id, name, count, cost) VALUES ($1, $2, $3, $4) RETURNING id", table),
-		m.ID,
+		fmt.Sprintf("INSERT INTO %s (code, name, count, cost) VALUES ($1, $2, $3, $4) RETURNING code", table),
+		m.Code,
 		m.Name,
 		m.Count,
 		m.Cost,
-	).Scan(&m.ID)
+	).Scan(&m.Code)
 }
 
 // Update обновляет существующую запись в базе данных.
 func (r *Repository) Update(m *model.Model) error {
 	return r.store.db.QueryRow(
-		fmt.Sprintf("UPDATE %s SET name = $2, count = $3, cost = $4 WHERE id = $1 RETURNING id", table),
-		m.ID,
+		fmt.Sprintf("UPDATE %s SET name = $2, count = $3, cost = $4 WHERE code = $1 RETURNING code", table),
+		m.Code,
 		m.Name,
 		m.Count,
 		m.Cost,
-	).Scan(&m.ID)
+	).Scan(&m.Code)
 }
 
 // Delete удаляет запись из базы данных по идентификатору.
-func (r *Repository) Delete(id string) (*model.Model, error) {
+func (r *Repository) Delete(code string) (*model.Model, error) {
 	p := &model.Model{}
 	if err := r.store.db.QueryRow(
-		fmt.Sprintf("SELECT id, name, count, cost FROM %s WHERE id = $1", table),
-		id,
+		fmt.Sprintf("SELECT code, name, count, cost FROM %s WHERE code = $1", table),
+		code,
 	).Scan(
-		&p.ID,
+		&p.Code,
 		&p.Name,
 		&p.Count,
 		&p.Cost,
@@ -61,8 +58,8 @@ func (r *Repository) Delete(id string) (*model.Model, error) {
 	}
 
 	if _, err := r.store.db.Exec(
-		fmt.Sprintf("DELETE FROM %s WHERE id = $1", table),
-		id,
+		fmt.Sprintf("DELETE FROM %s WHERE code = $1", table),
+		code,
 	); err != nil {
 		return nil, err
 	}
@@ -71,13 +68,13 @@ func (r *Repository) Delete(id string) (*model.Model, error) {
 }
 
 // FindOne находит запись в базе данных по идентификатору.
-func (r *Repository) FindOne(id string) (*model.Model, error) {
+func (r *Repository) FindOne(code string) (*model.Model, error) {
 	p := &model.Model{}
 	if err := r.store.db.QueryRow(
-		fmt.Sprintf("SELECT id, name, count, cost FROM %s WHERE id = $1", table),
-		id,
+		fmt.Sprintf("SELECT code, name, count, cost FROM %s WHERE code = $1", table),
+		code,
 	).Scan(
-		&p.ID,
+		&p.Code,
 		&p.Name,
 		&p.Count,
 		&p.Cost,
@@ -97,7 +94,7 @@ func (r *Repository) FindAll() (map[string]*model.Model, error) {
 	records := make(map[string]*model.Model)
 	m := &model.Model{}
 
-	rows, err := r.store.db.Query("SELECT id, name, count, cost FROM inventory")
+	rows, err := r.store.db.Query("SELECT code, name, count, cost FROM inventory")
 	if err != nil {
 		return nil, store.ErrRecordNotFound
 	}
@@ -105,12 +102,12 @@ func (r *Repository) FindAll() (map[string]*model.Model, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&m.ID, &m.Name, &m.Count, &m.Cost); err != nil {
+		if err := rows.Scan(&m.Code, &m.Name, &m.Count, &m.Cost); err != nil {
 			return nil, store.ErrRecordNotFound
 		}
 
-		records[m.ID] = &model.Model{
-			ID:    m.ID,
+		records[m.Code] = &model.Model{
+			Code:  m.Code,
 			Name:  m.Name,
 			Count: m.Count,
 			Cost:  m.Cost,

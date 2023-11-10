@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -117,13 +116,9 @@ func (s *server) handleInventoryUpdate() http.HandlerFunc {
 // handleInventoryFindOne обрабатывает запрос на поиск записи инвентаря по идентификатору.
 func (s *server) handleInventoryFindOne() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		idStr, _ := mux.Vars(r)["id"]
-		id, err := uuid.Parse(idStr)
-		if err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
-		}
+		id, _ := mux.Vars(r)["id"]
 
-		record, err := s.store.Repository().FindOne(id.String())
+		record, err := s.store.Repository().FindOne(id)
 		if err != nil {
 			s.error(w, r, http.StatusNotFound, err)
 			return
@@ -136,13 +131,9 @@ func (s *server) handleInventoryFindOne() http.HandlerFunc {
 // handleInventoryDelete обрабатывает запрос на удаление записи инвентаря по идентификатору.
 func (s *server) handleInventoryDelete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		idStr, _ := mux.Vars(r)["id"]
-		id, err := uuid.Parse(idStr)
-		if err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
-		}
+		id, _ := mux.Vars(r)["id"]
 
-		record, err := s.store.Repository().Delete(id.String())
+		record, err := s.store.Repository().Delete(id)
 		if err != nil {
 			s.error(w, r, http.StatusNotFound, err)
 			return

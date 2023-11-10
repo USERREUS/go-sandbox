@@ -45,10 +45,10 @@ func newDB(dbURL string) (*sql.DB, error) {
 	if _, err := db.Exec(
 		"CREATE TABLE IF NOT EXISTS inventory" +
 			"(" +
-			"id VARCHAR NOT NULL, " +
+			"code VARCHAR NOT NULL, " +
 			"name VARCHAR NOT NULL, " +
-			"count DECIMAL NOT NULL, " +
-			"cost DECIMAL NOT NULL" +
+			"count INT NOT NULL, " +
+			"cost INT NOT NULL" +
 			")",
 	); err != nil {
 		return nil, err

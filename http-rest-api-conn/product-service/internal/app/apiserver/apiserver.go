@@ -46,7 +46,7 @@ func newDB(dbURL string) (*sql.DB, error) {
 			"(" +
 			"code VARCHAR NOT NULL, " +
 			"name VARCHAR NOT NULL, " +
-			"weight DECIMAL NOT NULL, " +
+			"weight INT NOT NULL, " +
 			"description VARCHAR NOT NULL" +
 			")",
 	)

@@ -15,8 +15,9 @@ Order во время формирования заказа должен орг�
 
 ### PostgreSQL
 
+### Product
 ```
-Product { 
+{ 
 	"code"        : string,
 	"name" 	      : string,
 	"weight"      : int,
@@ -27,6 +28,32 @@ Product {
 ### HTTP endpoints
 
 -   POST: /product 	-- Create(Product) -> Product
--    GET: /product 	-- GetAll() 	   -> map\[code\]Poduct
+-    GET: /product 	-- GetAll() 	   -> map\[Code\]Poduct
 -    GET: /product/{id} -- GetOne(Code)    -> Product
 - DELETE: /product/{id} -- Delete(Code)    -> Product
+
+
+## InventoryService
+
+### localhost:8083
+
+### PostgreSQL
+
+### Inventory
+```
+{ 
+	"code"  : string,
+	"name" 	: string,
+	"count" : int,
+	"cost"  : int
+}
+```
+	
+### HTTP endpoints
+```
+-   POST: localhost:8083/inventory      -- Create(Inventory)   -> Inventory
+-    PUT: localhost:8083/inventory      -- Update(Inventory)   -> Inventory
+-    GET: localhost:8083/inventory      -- GetAll() 	       -> map\[ProductCode\]Inventory
+-    GET: localhost:8083/inventory/{id} -- GetOne(ProductCode) -> Inventory
+- DELETE: localhost:8083/inventory/{id} -- Delete(ProductCode) -> Inventory
+```
