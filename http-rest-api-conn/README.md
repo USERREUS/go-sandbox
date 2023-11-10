@@ -2,24 +2,31 @@
 
 Order во время формирования заказа должен организовать запрос к сервису Inventory, используя синхронное сообщение (rest api, grpc). Сервис Order после формирования заказа должен посылать асинхронное сообщение (Kafka, RabbitMQ) сервису Notification.
 
-## Описание
+# Описание
 
-### Взимодействие
+## Взимодействие
 
-- Во время формирования заказа направляет запрос к , используя синхронное сообщение. Проверяет наличие, количество и цену товара на складе. В случае успешной проверки добавляет заказ.
+- Во время формирования заказа Order направляет запрос к Inventory, используя синхронное REST API сообщение. Проверяет наличие, количество и цену товара на складе. В случае успешной проверки добавляет заказ.
 - После формирования заказа сервис Order формирует асинхронное сообщение (RabbitMQ) сервису Notification.
 
-### Хранение данных
+## ProductService 
 
-- ProductService      (PostgreSQL) 
-- OrderService        (MongoDB)
-- InventoryService    (PostgreSQL)
-- NotificationService (MongoDB)
+### localhost:8084
 
+### PostgreSQL
 
-### Все сервисы поддерживают следующие HTTP маршруты:
+```
+Product { 
+	"code"        : string,
+	"name" 	      : string,
+	"weight"      : int,
+	"description" : string
+}
+```
+	
+### HTTP endpoints
 
-- POST:   localhost:<8080>/\<service>      (create)
-- GET:    localhost:<8080>/\<service>      (getAll)
-- GET:    localhost:<8080>/\<service>/{id} (getOne)
-- DELETE: localhost:<8080>/\<service>/{id} (Delete)
+-   POST: /product 	-- Create(Product) -> Product
+-    GET: /product 	-- GetAll() 	   -> map\[code\]Poduct
+-    GET: /product/{id} -- GetOne(Code)    -> Product
+- DELETE: /product/{id} -- Delete(Code)    -> Product

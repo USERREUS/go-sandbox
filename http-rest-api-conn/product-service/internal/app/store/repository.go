@@ -1,10 +1,11 @@
 package store
 
-import "http-rest-api/internal/app/model"
+import "product-service/internal/app/model"
 
+// ProductRepository представляет собой интерфейс для взаимодействия с хранилищем продуктов.
 type ProductRepository interface {
-	Create(*model.Product) error
-	FindOne(string) (*model.Product, error)
-	Delete(string) (*model.Product, error)
-	FindAll() (map[string]*model.Product, error)
+	Create(*model.Product) error                 // Создание нового продукта
+	FindOne(string) (*model.Product, error)      // Поиск продукта по идентификатору
+	FindAll() (map[string]*model.Product, error) // Поиск всех продуктов
+	Delete(string) (*model.Product, error)       // Удаление продукта по идентификатору
 }

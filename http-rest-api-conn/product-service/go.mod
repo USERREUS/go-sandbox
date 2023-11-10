@@ -1,4 +1,4 @@
-module http-rest-api
+module product-service
 
 go 1.18
 

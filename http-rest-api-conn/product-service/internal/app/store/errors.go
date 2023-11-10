@@ -2,6 +2,5 @@ package store
 
 import "errors"
 
-var (
-	ErrRecordNotFound = errors.New("record not found")
-)
+// ErrRecordNotFound представляет собой ошибку, возвращаемую при попытке получения записи, которая не существует в хранилище.
+var ErrRecordNotFound = errors.New("record not found")

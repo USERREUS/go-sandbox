@@ -2,34 +2,37 @@ package sqlstore
 
 import (
 	"database/sql"
-	"http-rest-api/internal/app/model"
-	"http-rest-api/internal/app/store"
+	"product-service/internal/app/model"
+	"product-service/internal/app/store"
 
 	"github.com/google/uuid"
 )
 
+// ProductRepository представляет собой репозиторий продуктов для взаимодействия с базой данных.
 type ProductRepository struct {
 	store *Store
 }
 
+// Create создает новую запись о продукте в базе данных.
 func (r *ProductRepository) Create(p *model.Product) error {
-	p.ID = uuid.New().String()
+	p.Code = uuid.New().String()
 	return r.store.db.QueryRow(
-		"INSERT INTO products (id, name, weight, description) VALUES ($1, $2, $3, $4) RETURNING id",
-		p.ID,
+		"INSERT INTO products (code, name, weight, description) VALUES ($1, $2, $3, $4) RETURNING code",
+		p.Code,
 		p.Name,
 		p.Weight,
 		p.Description,
-	).Scan(&p.ID)
+	).Scan(&p.Code)
 }
 
-func (r *ProductRepository) FindOne(id string) (*model.Product, error) {
+// FindOne возвращает продукт из базы данных по его уникальному коду.
+func (r *ProductRepository) FindOne(code string) (*model.Product, error) {
 	p := &model.Product{}
 	if err := r.store.db.QueryRow(
-		"SELECT id, name, weight, description FROM products WHERE id = $1",
-		id,
+		"SELECT code, name, weight, description FROM products WHERE code = $1",
+		code,
 	).Scan(
-		&p.ID,
+		&p.Code,
 		&p.Name,
 		&p.Weight,
 		&p.Description,
@@ -44,13 +47,14 @@ func (r *ProductRepository) FindOne(id string) (*model.Product, error) {
 	return p, nil
 }
 
-func (r *ProductRepository) Delete(id string) (*model.Product, error) {
+// Delete удаляет продукт из базы данных по его уникальному коду.
+func (r *ProductRepository) Delete(code string) (*model.Product, error) {
 	p := &model.Product{}
 	if err := r.store.db.QueryRow(
-		"SELECT id, name, weight, description FROM products WHERE id = $1",
-		id,
+		"SELECT code, name, weight, description FROM products WHERE code = $1",
+		code,
 	).Scan(
-		&p.ID,
+		&p.Code,
 		&p.Name,
 		&p.Weight,
 		&p.Description,
@@ -62,7 +66,7 @@ func (r *ProductRepository) Delete(id string) (*model.Product, error) {
 		return nil, err
 	}
 
-	_, err := r.store.db.Exec("DELETE FROM products WHERE id = $1", id)
+	_, err := r.store.db.Exec("DELETE FROM products WHERE code = $1", code)
 	if err != nil {
 		return nil, err
 	}
@@ -70,11 +74,12 @@ func (r *ProductRepository) Delete(id string) (*model.Product, error) {
 	return p, nil
 }
 
+// FindAll возвращает все продукты из базы данных.
 func (r *ProductRepository) FindAll() (map[string]*model.Product, error) {
 	records := make(map[string]*model.Product)
 	p := &model.Product{}
 
-	rows, err := r.store.db.Query("SELECT id, name, weight, description FROM products")
+	rows, err := r.store.db.Query("SELECT code, name, weight, description FROM products")
 	if err != nil {
 		return nil, store.ErrRecordNotFound
 	}
@@ -82,11 +87,16 @@ func (r *ProductRepository) FindAll() (map[string]*model.Product, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&p.ID, &p.Name, &p.Weight, &p.Description); err != nil {
+		if err := rows.Scan(&p.Code, &p.Name, &p.Weight, &p.Description); err != nil {
 			return nil, store.ErrRecordNotFound
 		}
 
-		records[p.ID] = p
+		records[p.Code] = &model.Product{
+			Code:        p.Code,
+			Name:        p.Name,
+			Weight:      p.Weight,
+			Description: p.Description,
+		}
 	}
 
 	if err := rows.Err(); err != nil {
