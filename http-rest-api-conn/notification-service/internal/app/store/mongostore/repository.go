@@ -11,20 +11,16 @@ const (
 	table = "inventory"
 )
 
-type Notification struct {
-	MsgType     string `bson:"message_type"`
-	Description string `bson:"description"`
-	Data        string `bson:"data,omitempty"`
-}
-
+// Repository предоставляет методы для взаимодействия с MongoDB.
 type Repository struct {
 	store *Store
 }
 
+// Create добавляет новую запись в коллекцию MongoDB.
 func (r *Repository) Create(m *model.Model) error {
-	temp := Notification{
+	temp := model.Model{
 		MsgType:     m.MsgType,
-		Data:        time.Now().String(),
+		Date:        time.Now().String(),
 		Description: m.Description,
 	}
 
@@ -36,6 +32,7 @@ func (r *Repository) Create(m *model.Model) error {
 	return nil
 }
 
+// Delete удаляет записи из коллекции MongoDB по указанному типу сообщения.
 func (r *Repository) Delete(MsgType string) error {
 	filter := bson.M{"message_type": MsgType}
 	_, err := r.store.collection.DeleteMany(r.store.context, filter)
@@ -45,6 +42,7 @@ func (r *Repository) Delete(MsgType string) error {
 	return nil
 }
 
+// FindMany находит все записи в коллекции MongoDB по указанному типу сообщения.
 func (r *Repository) FindMany(MsgType string) ([]*model.Model, error) {
 	var records []*model.Model
 
@@ -55,7 +53,7 @@ func (r *Repository) FindMany(MsgType string) ([]*model.Model, error) {
 	}
 	defer cursor.Close(r.store.context)
 
-	var results []Notification
+	var results []model.Model
 	if err := cursor.All(r.store.context, &results); err != nil {
 		return nil, err
 	}
@@ -64,13 +62,14 @@ func (r *Repository) FindMany(MsgType string) ([]*model.Model, error) {
 		records = append(records, &model.Model{
 			MsgType:     data.MsgType,
 			Description: data.Description,
-			Data:        data.Data,
+			Date:        data.Date,
 		})
 	}
 
 	return records, nil
 }
 
+// FindAll находит все записи в коллекции MongoDB.
 func (r *Repository) FindAll() ([]*model.Model, error) {
 	var records []*model.Model
 
@@ -81,7 +80,7 @@ func (r *Repository) FindAll() ([]*model.Model, error) {
 	}
 	defer cursor.Close(r.store.context)
 
-	var results []Notification
+	var results []model.Model
 	if err := cursor.All(r.store.context, &results); err != nil {
 		return nil, err
 	}
@@ -90,7 +89,7 @@ func (r *Repository) FindAll() ([]*model.Model, error) {
 		records = append(records, &model.Model{
 			MsgType:     data.MsgType,
 			Description: data.Description,
-			Data:        data.Data,
+			Date:        data.Date,
 		})
 	}
 

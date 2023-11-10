@@ -1,6 +1,7 @@
 # Задание
 
-Order во время формирования заказа должен организовать запрос к сервису Inventory, используя синхронное сообщение (rest api, grpc). Сервис Order после формирования заказа должен посылать асинхронное сообщение (Kafka, RabbitMQ) сервису Notification.
+- Order во время формирования заказа должен организовать запрос к сервису Inventory, используя синхронное сообщение (rest api, grpc). 
+- Сервис Order после формирования заказа должен посылать асинхронное сообщение (Kafka, RabbitMQ) сервису Notification.
 
 # Описание
 
@@ -26,11 +27,12 @@ Order во время формирования заказа должен орг�
 ```
 	
 ### HTTP endpoints
-
+```
 -   POST: /product 	-- Create(Product) -> Product
 -    GET: /product 	-- GetAll() 	   -> map\[Code\]Poduct
 -    GET: /product/{id} -- GetOne(Code)    -> Product
 - DELETE: /product/{id} -- Delete(Code)    -> Product
+```
 
 
 ## InventoryService
@@ -51,9 +53,68 @@ Order во время формирования заказа должен орг�
 	
 ### HTTP endpoints
 ```
--   POST: localhost:8083/inventory      -- Create(Inventory)   -> Inventory
--    PUT: localhost:8083/inventory      -- Update(Inventory)   -> Inventory
--    GET: localhost:8083/inventory      -- GetAll() 	       -> map\[ProductCode\]Inventory
--    GET: localhost:8083/inventory/{id} -- GetOne(ProductCode) -> Inventory
-- DELETE: localhost:8083/inventory/{id} -- Delete(ProductCode) -> Inventory
+-   POST: /inventory      -- Create(Inventory)   -> Inventory
+-    PUT: /inventory      -- Update(Inventory)   -> Inventory
+-    GET: /inventory      -- GetAll() 	       -> map\[ProductCode\]Inventory
+-    GET: /inventory/{id} -- GetOne(ProductCode) -> Inventory
+- DELETE: /inventory/{id} -- Delete(ProductCode) -> Inventory
+```
+
+
+## NotificationService
+
+### localhost:8082
+
+### MongoDB
+
+### RabbitMQ
+
+### Notification
+```
+{ 
+	"message_type" : string,
+	"description"  : string,
+	"date" 	       : string
+}
+```
+	
+### HTTP endpoints
+```
+-   POST: /notification       -- Create(Notification) -> Notification
+-    GET: /notification       -- GetAll() 	      -> \[\]Notification
+-    GET: /notification/{msg} -- GetMany(MsgType)     -> \[\]Notification
+- DELETE: /notification/{msg} -- Delete(MsgType)      -> \[\]Notification
+```
+
+
+## OrderService
+
+### localhost:8081
+
+### MongoDB
+
+### RabbitMQ
+
+### Order
+```
+{ 
+	"order_code"   : string,
+	"date"         : string,
+	"product_item" : [
+		{
+			"code"  : string,
+			"name"  : string,
+			"count" : int,
+			"cost"  : int
+		},...
+	]
+}
+```
+	
+### HTTP endpoints
+```
+-   POST: /order      -- Create(\[\]ProductItem) -> \[\]ProductItem
+-    GET: /order      -- GetAll() 	       -> map\[code\]Order
+-    GET: /order/{id} -- GetOne(Code)          -> Order
+- DELETE: /order/{id} -- Delete(Code)          -> Order
 ```

@@ -32,6 +32,7 @@ func Start(config *Config) error {
 	// Создание хранилища MongoDB
 	store := mongostore.New(ctx, collection)
 
+	// Подключение к RabbitMQ
 	conn, err := amqp.Dial(config.RabbitMQURL)
 	if err != nil {
 		return err
@@ -44,11 +45,12 @@ func Start(config *Config) error {
 	}
 	defer ch.Close()
 
-	// Создание сервера с переданным хранилищем
+	// Создание сервера с переданным хранилищем и каналом RabbitMQ
 	srv := newServer(store, ch)
 
+	// Асинхронный запуск сервера в горутине
 	go func() {
-		err := srv.Listen()
+		err := srv.ListenRabbitMQ()
 		if err != nil {
 			log.Fatal(err.Error())
 		}
