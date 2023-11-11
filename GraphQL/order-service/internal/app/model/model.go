@@ -2,9 +2,9 @@ package model
 
 // Model представляет собой структуру данных для хранения информации о заказе в MongoDB.
 type Model struct {
-	OrderCode    string         `json:"order_code" bson:"order_code"`     // Уникальный код заказа (пустой, если не установлен)
-	Date         string         `json:"date" bson:"date"`                 // Дата создания заказа
-	ProductItems []*ProductItem `json:"product_item" bson:"product_item"` // Список товаров в заказе
+	OrderCode    string         `json:"order_code" bson:"order_code"` // Уникальный код заказа (пустой, если не установлен)
+	Date         string         `json:"date" bson:"date"`             // Дата создания заказа
+	ProductItems []*ProductItem `json:"order_item" bson:"order_item"` // Список товаров в заказе
 }
 
 // ProductItem представляет собой структуру данных для хранения информации о товаре в заказе.

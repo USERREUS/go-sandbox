@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"order-service/internal/app/store/mongostore"
 
@@ -10,26 +11,34 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type MongoDB struct {
+	Client     *mongo.Client
+	Context    context.Context
+	Collection *mongo.Collection
+}
+
 // Start запускает API-сервер с указанной конфигурацией.
 func Start(config *Config) error {
-	// Настройка параметров подключения к MongoDB
-	clientOptions := options.Client().ApplyURI(config.DatabaseURL)
-	ctx := context.Background()
-	defer ctx.Done()
-
-	// Подключение к MongoDB
-	client, err := mongo.Connect(ctx, clientOptions)
+	mongodb, err := ConnectToMongoDB("restapi_dev", "order", config.DatabaseURL)
 	if err != nil {
 		return err
 	}
-	defer client.Disconnect(ctx)
+	defer func() {
+		if err := mongodb.Client.Disconnect(mongodb.Context); err != nil {
+			log.Fatal("Error disconnecting from MongoDB:", err)
+		}
+	}()
 
-	// Выбор базы данных и коллекции в MongoDB
-	database := client.Database("restapi_dev")
-	collection := database.Collection("order")
+	// Проверка подключения
+	err = mongodb.Client.Ping(mongodb.Context, nil)
+	if err != nil {
+		log.Fatal("Unable to ping MongoDB:", err)
+	}
+
+	log.Println("Successfully connected to MongoDB")
 
 	// Создание хранилища MongoDB
-	store := mongostore.New(ctx, collection)
+	store := mongostore.New(mongodb.Context, mongodb.Collection)
 
 	// Подключение к RabbitMQ
 	conn, err := amqp.Dial(config.RabbitMQURL)
@@ -64,4 +73,23 @@ func Start(config *Config) error {
 
 	// Запуск сервера на указанном адресе прослушивания
 	return http.ListenAndServe(config.BindAddr, srv)
+}
+
+func ConnectToMongoDB(databaseName, collectionName, databaseURL string) (*MongoDB, error) {
+	clientOptions := options.Client().ApplyURI(databaseURL)
+	ctx := context.Background()
+
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	database := client.Database(databaseName)
+	collection := database.Collection(collectionName)
+
+	return &MongoDB{
+		Client:     client,
+		Context:    ctx,
+		Collection: collection,
+	}, nil
 }

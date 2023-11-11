@@ -1,4 +1,4 @@
-module test
+module graphql-servive
 
 go 1.18
 
