@@ -1,8 +1,30 @@
-package graphqlserver
+package server
 
 import "github.com/graphql-go/graphql"
 
-var OrderType = graphql.NewObject(graphql.ObjectConfig{
+// GraphQLTypes структура, содержащая определения типов GraphQL для сервера.
+type GraphQLTypes struct {
+	Order          *graphql.Object      // Тип объекта для заказа
+	OrderItem      *graphql.Object      // Тип объекта для элемента заказа
+	Product        *graphql.Object      // Тип объекта для продукта
+	OrderInput     *graphql.InputObject // Тип входного объекта для заказа
+	OrderInputItem *graphql.InputObject // Тип входного объекта для элемента заказа
+}
+
+// TypesInit функция, инициализирующая и возвращающая экземпляр GraphQLTypes с определенными типами GraphQL.
+func TypesInit() *GraphQLTypes {
+	return &GraphQLTypes{
+		OrderItem:      orderItemType,
+		Order:          orderType,
+		Product:        productType,
+		OrderInput:     orderInputType,
+		OrderInputItem: orderItemInputType,
+	}
+}
+
+// Определения типов GraphQL для заказа, элемента заказа и продукта:
+
+var orderType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Order",
 	Fields: graphql.Fields{
 		"order_code": &graphql.Field{
@@ -12,12 +34,12 @@ var OrderType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.String,
 		},
 		"order_item": &graphql.Field{
-			Type: graphql.NewList(OrderItemType),
+			Type: graphql.NewList(orderItemType),
 		},
 	},
 })
 
-var OrderItemType = graphql.NewObject(graphql.ObjectConfig{
+var orderItemType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "OrderItem",
 	Fields: graphql.Fields{
 		"product_code": &graphql.Field{
@@ -35,7 +57,7 @@ var OrderItemType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var ProductType = graphql.NewObject(graphql.ObjectConfig{
+var productType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Product",
 	Fields: graphql.Fields{
 		"code": &graphql.Field{
@@ -53,16 +75,16 @@ var ProductType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var OrderInputType = graphql.NewInputObject(graphql.InputObjectConfig{
+var orderInputType = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "OrderInput",
 	Fields: graphql.InputObjectConfigFieldMap{
 		"items": &graphql.InputObjectFieldConfig{
-			Type: graphql.NewList(OrderItemInputType),
+			Type: graphql.NewList(orderItemInputType),
 		},
 	},
 })
 
-var OrderItemInputType = graphql.NewInputObject(graphql.InputObjectConfig{
+var orderItemInputType = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "OrderItemInput",
 	Fields: graphql.InputObjectConfigFieldMap{
 		"code": &graphql.InputObjectFieldConfig{

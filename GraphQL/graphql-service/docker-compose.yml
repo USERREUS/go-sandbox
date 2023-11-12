@@ -1,0 +1,10 @@
+version: '3'
+services:
+  graphql-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    image: graphql-sevice-img
+    container_name: graphql-service

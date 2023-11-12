@@ -1,1 +1,4 @@
-"bind_addr" = ":8080"
+"graphql_handler" = "/graphql"
+"port" = ":8080"
+"order_addr"   = "http://localhost:8081/order"
+"product_addr" = "http://localhost:8084/product"

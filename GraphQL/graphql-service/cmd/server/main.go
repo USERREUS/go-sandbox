@@ -3,38 +3,52 @@ package main
 
 // Импортирование необходимых пакетов для создания GraphQL-сервера.
 import (
-	"graphql-service/internal/app/server" // Подключение локального пакета server с определением GraphQL-схемы.
-	"log"                                 // Пакет для логирования.
-	"net/http"                            // Пакет для работы с HTTP-протоколом.
+	// Подключение локального пакета server с определением GraphQL-схемы.
+	"flag"
+	"graphql-service/internal/app/server"
 
-	"github.com/graphql-go/graphql" // Библиотека для работы с GraphQL.
-	"github.com/graphql-go/handler" // Обработчик HTTP-запросов GraphQL.
+	// Пакет для логирования.
+	"github.com/BurntSushi/toml"
+	"github.com/sirupsen/logrus"
+	// Библиотека для работы с GraphQL.
+	// Обработчик HTTP-запросов GraphQL.
 )
 
-// Главная функция main - точка входа программы на языке Go.
+var (
+	configPath string
+)
+
+// init устанавливает значения флагов по умолчанию.
+func init() {
+	flag.StringVar(&configPath, "config-path", "configs/graphql-server.toml", "путь к файлу конфигурации")
+}
+
+// main является точкой входа в приложение.
 func main() {
-	// Создание GraphQL-схемы на основе Query и Mutation из пакета server.
-	schema, err := graphql.NewSchema(graphql.SchemaConfig{
-		Query:    server.Query,
-		Mutation: server.Mutation,
+	// Разбор флагов командной строки.
+	flag.Parse()
+
+	// Инициализация логгера.
+	logger := logrus.New()
+	logger.SetLevel(logrus.InfoLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		ForceColors: true,
 	})
+
+	// Создание экземпляра конфигурации и загрузка значений из файла.
+	config := server.NewConfig()
+	_, err := toml.DecodeFile(configPath, config)
 	if err != nil {
-		log.Fatal(err.Error()) // В случае ошибки создания схемы, программа завершается с выводом сообщения об ошибке.
+		// Обработка ошибки при загрузке конфигурации.
+		logger.Fatalln(err)
 	}
 
-	// Создание нового обработчика GraphQL с конфигурацией.
-	h := handler.New(&handler.Config{
-		Schema:   &schema, // Указание схемы GraphQL для обработчика.
-		Pretty:   true,    // Параметр Pretty для красивого форматирования ответов GraphQL.
-		GraphiQL: true,    // Включение GraphiQL - веб-интерфейса для отладки GraphQL-запросов.
-	})
+	// Создание экземпляра GraphQL-сервера с использованием конфигурации и логгера.
+	srv := server.NewServer(config, logger)
 
-	// Регистрация обработчика GraphQL по указанному адресу.
-	http.Handle(server.Graphql_addr, h)
-
-	// Вывод сообщения о запуске сервера GraphQL с указанием адреса и порта.
-	log.Printf("GraphQL server is running on http://localhost%s/graphql\n", server.Graphql_port)
-
-	// Запуск HTTP-сервера для обслуживания GraphQL-запросов.
-	http.ListenAndServe(server.Graphql_port, nil)
+	// Запуск API-сервера с использованием конфигурации.
+	if err := srv.Start(); err != nil {
+		// Обработка ошибки при запуске сервера.
+		logger.Fatalln(err)
+	}
 }
