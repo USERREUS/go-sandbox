@@ -3,9 +3,9 @@ package main
 
 // Импортирование необходимых пакетов для создания GraphQL-сервера.
 import (
-	"graphql-servive/internal/server" // Подключение локального пакета server с определением GraphQL-схемы.
-	"log"                             // Пакет для логирования.
-	"net/http"                        // Пакет для работы с HTTP-протоколом.
+	"graphql-service/internal/app/server" // Подключение локального пакета server с определением GraphQL-схемы.
+	"log"                                 // Пакет для логирования.
+	"net/http"                            // Пакет для работы с HTTP-протоколом.
 
 	"github.com/graphql-go/graphql" // Библиотека для работы с GraphQL.
 	"github.com/graphql-go/handler" // Обработчик HTTP-запросов GraphQL.

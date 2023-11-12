@@ -1,4 +1,4 @@
-module graphql-servive
+module graphql-service
 
 go 1.18
 

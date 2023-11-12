@@ -2,7 +2,7 @@ package server
 
 import (
 	"errors"
-	"graphql-servive/internal/model"
+	"graphql-service/internal/app/model"
 
 	"github.com/graphql-go/graphql"
 )

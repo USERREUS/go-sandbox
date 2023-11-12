@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"graphql-servive/internal/model"
+	"graphql-service/internal/app/model"
 	"log"
 	"net/http"
 )

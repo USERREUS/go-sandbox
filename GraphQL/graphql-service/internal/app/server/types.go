@@ -1,4 +1,4 @@
-package server
+package graphqlserver
 
 import "github.com/graphql-go/graphql"
 
