@@ -12,4 +12,4 @@
 
 ## http-rest-api
 
-Репозиторий REST API сервисов (без взаимодействия)
+Разработка RestAPI сервисов (Product Service, Order Service, Inventory Service, NotificationService)

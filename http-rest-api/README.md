@@ -11,8 +11,9 @@
 
 
 ### Все сервисы поддерживают следующие HTTP маршруты:
-
-- POST:   localhost:<8080>/\<service>      (create)
-- GET:    localhost:<8080>/\<service>      (getAll)
-- GET:    localhost:<8080>/\<service>/{id} (getOne)
-- DELETE: localhost:<8080>/\<service>/{id} (Delete)
+```
+- POST:   localhost:<port>/<service>      (create)
+- GET:    localhost:<port>/<service>      (getAll)
+- GET:    localhost:<port>/<service>/{id} (getOne)
+- DELETE: localhost:<port>/<service>/{id} (Delete)
+```
