@@ -17,4 +17,8 @@
 
 ## http-rest-api-conn
 
-Разработать взаимодействие сервисов (Order Service, Inventory Service, NotificationService).
+Разработка взаимодействия сервисов (Order Service, Inventory Service, NotificationService).
+
+## graphql-api
+
+Разработка GraphQL сервиса для организации взаимодействия с сервисами (Order Service, ProductService), объединив их RestAPI в единую схему
