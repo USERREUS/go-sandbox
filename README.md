@@ -13,3 +13,8 @@
 ## http-rest-api
 
 Разработка RestAPI сервисов (Product Service, Order Service, Inventory Service, NotificationService)
+
+
+## http-rest-api-conn
+
+Разработать взаимодействие сервисов (Order Service, Inventory Service, NotificationService).
