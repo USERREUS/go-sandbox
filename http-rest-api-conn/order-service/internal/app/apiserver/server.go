@@ -185,26 +185,26 @@ func (s *server) handleOrderCreate() http.HandlerFunc {
 		}
 
 		// Проверка наличия товаров в инвентаре и обновление информации о продуктах.
-		// for _, item := range items {
-		// 	prod, err := s.getInventoryProductByCode("8083", item.ProductCode)
-		// 	if err != nil {
-		// 		s.error(w, r, http.StatusNotFound, err)
-		// 		return
-		// 	}
+		for _, item := range items {
+			prod, err := s.getInventoryProductByCode("8083", item.ProductCode)
+			if err != nil {
+				s.error(w, r, http.StatusNotFound, err)
+				return
+			}
 
-		// 	if prod.Count < item.Count || prod.Cost != item.Cost {
-		// 		s.error(w, r, http.StatusBadRequest, errors.New("Data error"))
-		// 		return
-		// 	}
+			if prod.Count < item.Count || prod.Cost != item.Cost {
+				s.error(w, r, http.StatusBadRequest, errors.New("Data error"))
+				return
+			}
 
-		// 	prod.Count -= item.Count
+			prod.Count -= item.Count
 
-		// 	err = s.putInventoryProduct("8083", prod)
-		// 	if err != nil {
-		// 		s.error(w, r, http.StatusNotFound, err)
-		// 		return
-		// 	}
-		// }
+			err = s.putInventoryProduct("8083", prod)
+			if err != nil {
+				s.error(w, r, http.StatusNotFound, err)
+				return
+			}
+		}
 
 		// Создание заказа в хранилище.
 		res, err := s.store.Repository().Create(items)
@@ -213,12 +213,12 @@ func (s *server) handleOrderCreate() http.HandlerFunc {
 			return
 		}
 
-		// // Отправка заказа в очередь RabbitMQ.
-		// err = s.Enqueue(res.OrderCode)
-		// if err != nil {
-		// 	// Обработка ошибки (вывод в лог, но не прерывание выполнения).
-		// 	log.Printf("Error enqueueing order: %v", err)
-		// }
+		// Отправка заказа в очередь RabbitMQ.
+		err = s.Enqueue(res.OrderCode)
+		if err != nil {
+			// Обработка ошибки (вывод в лог, но не прерывание выполнения).
+			log.Printf("Error enqueueing order: %v", err)
+		}
 
 		// Отправка успешного ответа.
 		s.respond(w, r, http.StatusCreated, res)
