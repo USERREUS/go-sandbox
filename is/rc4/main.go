@@ -99,9 +99,9 @@ func decryptFile(inputPath, outputPath string, key []byte) error {
 func main() {
 	// Задание ключа и путей к файлам
 	key := []byte("secretkey")
-	inputPath := "input.jpg"
-	encryptedPath := "encrypted.jpg"
-	decryptedPath := "decrypted.jpg"
+	inputPath := "smile.png"
+	encryptedPath := "smile_encrypted.png"
+	decryptedPath := "smile_decrypted.png"
 
 	// Шифрование файла
 	err := encryptFile(inputPath, encryptedPath, key)
