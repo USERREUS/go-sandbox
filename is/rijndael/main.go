@@ -26,8 +26,8 @@ func main() {
 	//encryptedBuffer := encryptDataECB(c, mediaBuffer)
 	iv, _ := generateRandomIV()
 	//encryptedBuffer := encryptDataCBC(c, mediaBuffer, iv)
-	encryptedBuffer := encryptDataCFB(c, mediaBuffer, iv)
-	//encryptedBuffer := encryptDataOFB(c, mediaBuffer, iv)
+	//encryptedBuffer := encryptDataCFB(c, mediaBuffer, iv)
+	encryptedBuffer := encryptDataOFB(c, mediaBuffer, iv)
 
 	// Запись зашифрованных данных в файл
 	encryptedFilePath := "encrypted.jpg"
@@ -39,8 +39,8 @@ func main() {
 	// Расшифрование данных
 	//decryptedBuffer := decryptDataECB(c, encryptedBuffer)
 	//decryptedBuffer := decryptDataCBC(c, encryptedBuffer, iv)
-	decryptedBuffer := decryptDataCFB(c, encryptedBuffer, iv)
-	//decryptedBuffer := decryptDataOFB(c, encryptedBuffer, iv)
+	//decryptedBuffer := decryptDataCFB(c, encryptedBuffer, iv)
+	decryptedBuffer := decryptDataOFB(c, encryptedBuffer, iv)
 
 	// Запись расшифрованных данных в файл
 	decryptedFilePath := "decrypted.jpg"
@@ -79,38 +79,6 @@ func generateRandomIV() ([32]byte, error) {
 	}
 	return iv, nil
 }
-
-// func encryptDataCBC(c *rijndael.Cipher, data []byte) []byte {
-// 	blockSize := 32
-// 	numBlocks := (len(data) + blockSize - 1) / blockSize
-
-// 	encryptedBuffer := make([]byte, len(data))
-
-// 	for i := 0; i < numBlocks; i++ {
-// 		start := i * blockSize
-// 		end := (i + 1) * blockSize
-// 		if end > len(data) {
-// 			end = len(data)
-// 		}
-
-// 		var block [32]byte
-// 		for i := start; i < end; i++ {
-// 			block[i-start] = data[i] ^ c.Prev[i-start]
-// 		}
-
-// 		var encryptedBlock [32]byte
-
-// 		// Зашифрование блока данных
-// 		c.Encrypt(&encryptedBlock, &block)
-
-// 		// Запись зашифрованного блока в буфер
-// 		copy(encryptedBuffer[start:end], encryptedBlock[:])
-
-// 		copy(c.Prev[:], encryptedBlock[:])
-// 	}
-
-// 	return encryptedBuffer
-// }
 
 func encryptDataCBC(c *rijndael.Cipher, data []byte, iv [32]byte) []byte {
 	blockSize := 32
@@ -229,41 +197,6 @@ func encryptDataOFB(c *rijndael.Cipher, data []byte, iv [32]byte) []byte {
 
 	return encryptedBuffer
 }
-
-// func decryptDataCBC(c *rijndael.Cipher, data []byte) []byte {
-// 	blockSize := 32
-// 	numBlocks := (len(data) + blockSize - 1) / blockSize
-
-// 	decryptedBuffer := make([]byte, len(data))
-
-// 	for i := 0; i < numBlocks; i++ {
-// 		start := i * blockSize
-// 		end := (i + 1) * blockSize
-// 		if end > len(data) {
-// 			end = len(data)
-// 		}
-
-// 		var temp [32]byte
-// 		copy(temp[:], data[start:end])
-
-// 		var block [32]byte
-// 		copy(block[:], data[start:end])
-// 		var decryptedBlock [32]byte
-// 		// Расшифрование блока данных
-// 		c.Decrypt(&decryptedBlock, &block)
-
-// 		for i := start; i < end; i++ {
-// 			decryptedBlock[i-start] ^= c.Prev[i-start]
-// 		}
-
-// 		// Запись расшифрованного блока в буфер
-// 		copy(decryptedBuffer[start:end], decryptedBlock[:])
-
-// 		copy(c.Prev[:], temp[:])
-// 	}
-
-// 	return decryptedBuffer
-// }
 
 func decryptDataCBC(c *rijndael.Cipher, data []byte, iv [32]byte) []byte {
 	blockSize := 32

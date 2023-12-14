@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 12345678
+      DB_NAME: postgres
+      LOG_LEVEL: debug
+    restart: on-failure
+    depends_on:
+      - postgres
+      
+  graphql-service:
+    build:
+      context: ./graphql-service
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8080"
+    restart: on-failure
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    restart: on-failure

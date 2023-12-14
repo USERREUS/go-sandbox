@@ -1,20 +1,9 @@
-# Используйте официальный образ Golang
-FROM golang:1.18
+FROM golang:latest
 
-# Устанавливаем переменные окружения
-ENV GO111MODULE=on
-
-# Создаем рабочую директорию
 WORKDIR /app
 
-# Копируем все файлы в текущую директорию
 COPY . .
 
-# Собираем приложение
-RUN go build -o apiserver ./cmd/apiserver
+RUN go build -v ./cmd/apiserver
 
-# Экспортируем порт, который использует ваш сервер
-EXPOSE 8084
-
-# Запускаем ваш сервер при старте контейнера
 CMD ["./apiserver"]
