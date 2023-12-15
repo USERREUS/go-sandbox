@@ -1,6 +1,6 @@
 # Задание
 
-- Разработать GraphQL сервис для организации взаимодействия с сервисами (OrderService, ProductService), объединив их RestAPI в единую схему
+- Создать контейнеры системы с помощью Docker. Развернуть архитектурное решение с помощью (Docker Compose и Kubernates)
 
 # Описание
 
@@ -10,9 +10,16 @@
 - После формирования заказа сервис Order формирует асинхронное сообщение (RabbitMQ) сервису Notification.
 - GraphQL сервис запрашивает данные у Product и формирует заказ.
 
+## Контейнеризация
+
+- Для каждого сервиса создан свой Dockerfile.
+- Для всей системы создан docker-compose.yaml файл.
+- Внутри системы сервисы доступны по имени и порту.
+- Вне системы доступен только graphql сервис на localhost:8080/graphql.
+
 ## ProductService 
 
-### localhost:8084
+### product-service:8080
 
 ### PostgreSQL
 
@@ -37,7 +44,7 @@
 
 ## InventoryService
 
-### localhost:8083
+### inventory-service:8080
 
 ### PostgreSQL
 
@@ -63,7 +70,7 @@
 
 ## NotificationService
 
-### localhost:8082
+### notification-service:8080
 
 ### MongoDB
 
@@ -89,7 +96,7 @@
 
 ## OrderService
 
-### localhost:8081
+### order-service:8080
 
 ### MongoDB
 
@@ -126,7 +133,7 @@
 
 ### Query
 
-- Find all orders
+- Получить все заказы
 ```
 {
   findAllOrders {
@@ -141,7 +148,7 @@
   }
 }
 ```
-- Find order by code
+- Получить заказ по коду
 ```
 {
   findOrder(code: "<code>") {
@@ -157,7 +164,7 @@
 }
 
 ```
-- Find all products
+- Получить все продукты
 ```
 {
   findAllProducts {
@@ -168,7 +175,7 @@
   }
 }
 ```
-- Find product by code
+- Получить продукт по коду
 ```
 {
   findProduct(code: "<code>") {
@@ -182,7 +189,7 @@
 
 ### Mutation
 
-- Create order with slice order items
+- Создать заказ по списку продуктов
 ```
 mutation {
   addOrder (
